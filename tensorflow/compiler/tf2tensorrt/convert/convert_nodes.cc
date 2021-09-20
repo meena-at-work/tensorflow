@@ -4954,7 +4954,7 @@ Status ConvertGather(OpConverterParams* params) {
   // option for an input to be either tensor or weight.
   TF_RETURN_IF_ERROR(
       CheckInputsWeights(*params, {{"params", TrtInputArg::kBoth},
-                                   {"indices", TrtInputArg::kTensor},
+                                   {"indices", TrtInputArg::kBoth},
                                    {"axis", TrtInputArg::kWeight}}));
 
   const auto& params_input = inputs.at(0);
@@ -5004,7 +5004,7 @@ Status ConvertGather(OpConverterParams* params) {
   }
   if (params->validation_only) return Status::OK();
 
-  // Convert params to tensor is it is a weight.
+  // Convert params to tensor if it is a weight.
   ITensorProxyPtr params_tensor = nullptr;
   if (params_input.is_weights()) {
     params_tensor = params->converter->CreateConstantLayer(
@@ -5013,13 +5013,22 @@ Status ConvertGather(OpConverterParams* params) {
     params_tensor = params_input.tensor();
   }
 
+  // Convert indices to tensor if it is a weight.
+  ITensorProxyPtr indices_tensor = nullptr;
+  if (indices_input.is_weights()) {
+    indices_tensor = params->converter->CreateConstantLayer(
+        indices_input.weights(), indices_input.GetTrtDims());
+  } else {
+    indices_tensor = indices_input.tensor();
+  }
+
   // Note on how IGatherLayer works: if both the data and indices tensors have
   // a batch size dimension of size N, it performs:
   // for batchid in xrange(N):
   //   output[batchid, a0, ..., an, i, ..., j, b0, ..., bn] = (
   //       data[batchid, a0, ..., an, indices[batchid, i, ..., j] b0, ..., bn])
   nvinfer1::IGatherLayer* layer = params->converter->network()->addGather(
-      *params_tensor->trt_tensor(), *indices_input.tensor()->trt_tensor(),
+      *params_tensor->trt_tensor(), *indices_tensor->trt_tensor(),
       trt_axis);
   TFTRT_RETURN_ERROR_IF_NULLPTR(layer, node_def.name());
   params->converter->SetLayerName(layer, node_def);
