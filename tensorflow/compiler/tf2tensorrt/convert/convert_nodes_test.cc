@@ -5788,6 +5788,15 @@ TEST_P(OpConverter_FP32_FP16_INT32_Test, ConvertGather) {
     TestOpConverter("my_gather", node_def, p.expected_output_shape, p.status,
                     p.runtime_status, ElementsAreArray(p.expected_output));
   }
+
+  {
+    Reset();
+    AddTestWeights("params", {3, 2}, {1, 2, 3, 4, 5, 6}, tf_type_);
+    AddTestWeights("indices", {2, 2}, {0, 2, 1, 0}, DT_INT32);
+    AddTestWeights<int32>("axis", {1}, {0});
+    TestOpConverter("my_gather", node_def, {2, 2, 2}, Status::OK(),
+                    Status::OK(), ElementsAreArray({1, 2, 5, 6, 3, 4, 1, 2}));
+  }
 }
 
 template <typename OpType>
