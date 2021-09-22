@@ -4994,7 +4994,8 @@ Status ConvertGather(OpConverterParams* params) {
       params_input.GetTrtDims().nbDims +
       (params->use_implicit_batch && params_input.is_tensor() ? 1 : 0);
   const int indices_tf_rank =
-      indices_input.GetTrtDims().nbDims + (params->use_implicit_batch ? 1 : 0);
+      indices_input.GetTrtDims().nbDims +
+      (params->use_implicit_batch && indices_input.is_tensor()? 1 : 0);
   const int tf_gather_output_rank = params_tf_rank + indices_tf_rank - 1;
   if (tf_gather_output_rank >
       nvinfer1::Dims::MAX_DIMS + (params->use_implicit_batch ? 1 : 0)) {
