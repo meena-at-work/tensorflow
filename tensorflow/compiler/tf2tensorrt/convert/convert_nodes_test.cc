@@ -5779,15 +5779,9 @@ TEST_P(OpConverter_FP32_FP16_INT32_Test, ConvertGather) {
       },
   };
 
-  for (bool indices_is_tensor : {true, false}) {
-    for (auto p : test_params) {
+  for (auto p : test_params) {
+    for (bool indices_is_tensor : {true, false}) {
       Reset();
-      LOG(INFO) << "==========================================================";
-      LOG(INFO) << "params: " << DebugString(p.params_shape);
-      LOG(INFO) << "params is tensor: " << p.params_is_tensor;
-      LOG(INFO) << "indices: " << DebugString(p.indices_shape);
-      LOG(INFO) << "indices is tensor: " << indices_is_tensor;
-
       if (p.params_is_tensor) {
         AddTestTensor("params", p.params_shape, params_input);
       } else {
@@ -5798,17 +5792,11 @@ TEST_P(OpConverter_FP32_FP16_INT32_Test, ConvertGather) {
         AddTestTensor("indices", p.indices_shape, DT_INT32, p.indices, {},
                       p.add_index_status);
       } else {
-        // TODO: @Meenakshi @Tamas - It seems to be not working for
-        // ImplicitBatch
-        if (trt_mode_ == TrtTestMode::kImplicitBatch) {
-          continue;
-        }
         std::vector<int> indices_shape(p.indices_shape);
         AddTestWeights("indices", indices_shape, p.indices, DT_INT32);
       }
 
       AddTestWeights<int32>("axis", {1}, {p.axis});
-      LOG(INFO) << "==========================================================";
       TestOpConverter("my_gather", node_def, p.expected_output_shape,
                       p.conversion_status, p.runtime_status,
                       ElementsAreArray(p.expected_output));
