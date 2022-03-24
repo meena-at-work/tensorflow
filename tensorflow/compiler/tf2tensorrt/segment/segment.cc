@@ -908,8 +908,24 @@ Status SegmentGraph(const Graph* tf_graph,
       nonconverted_ops_map[node_op_type][string(reason)]++;
       node = nullptr;
     };
+
     absl::optional<DeviceNameUtils::ParsedName> device_name =
         GetDeviceParsedName(node->tf_node());
+
+    LOG(INFO) << "------------------- node device name = " << device_name;
+
+#if 0
+    absl::string_view name = "/job:localhost/replica:0/task:0/device:GPU:1"; 
+    if (device_name->has_type && device_name->type == "GPU")
+    {
+        DeviceNameUtils::ParsedName hacked_name;
+
+        if (DeviceNameUtils::ParseFullName(name, &hacked_name)) {
+            device_name = hacked_name;
+        }
+    }
+#endif
+
     // GetDeviceParseName capitalizes the device type.
     if (!device_name.has_value() ||
         (device_name->has_type && device_name->type != "GPU")) {
